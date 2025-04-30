@@ -1,0 +1,14 @@
+name: venv
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12.1
+  - pip
+  - pip:
+      - dotenv
+      - requests
+      - poetry
+      - openai=1.76.2
+
+      
