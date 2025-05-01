@@ -1,0 +1,33 @@
+[project]
+name = "src"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Mbogol Touye Achille ",email = "touyejunior@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "dotenv",
+    "requests",
+    "poetry",
+    "pre-commit"
+    "openai==1.76.2",
+    "langchain==0.3.24",
+    "langchain-core==0.3.56",
+    "langchain-text-splitters==0.3.8",
+    "langgraph==0.4.1",
+    "langgraph-checkpoint==2.0.25",
+    "langgraph-prebuilt==0.1.8",
+    "langgraph-sdk==0.1.66",
+    "langsmith==0.3.39",
+    "langserve==0.3.1",
+    "langchain-cli==0.0.36"
+
+[tool.poetry]
+packages = [{include = "src", from = "src"}]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
