@@ -5,3 +5,16 @@ repos:
     -   id: trailing-whitespace
     -   id: end-of-file-fixer
     -   id: check-yaml
+
+
+-   repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+    -   id: black
+
+
+-  repo: https://github.com/PyCQA/flake8
+   rev: 7.0.0
+   hooks:
+    -   id: flake8
+        args: ["--extend-ignore=E501,E266"]

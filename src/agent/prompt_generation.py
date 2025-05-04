@@ -1,5 +1,3 @@
-
-import os
 import logging
 import argparse
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -11,8 +9,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger(__name__)
 
 
-
-def prompt_template(state:  State) -> dict:
+def prompt_template(state: State) -> dict:
     """
     Generate a prompt template.
 
@@ -43,8 +40,7 @@ Please respond only in JSON format like this:
 
 """
 
-
-    if state.customer_query and not state.customer_audio_file :
+    if state.customer_query and not state.customer_audio_file:
         customer_review = state.customer_query
 
     elif state.customer_audio_file and not state.customer_query:
@@ -53,20 +49,23 @@ Please respond only in JSON format like this:
 
     else:
         logger.error("No input provided by the user.")
-        raise ValueError("You must provide either a text review or an audio file reviews.")
+        raise ValueError(
+            "You must provide either a text review or an audio file reviews."
+        )
 
+    return {
+        "prompt": [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=customer_review),
+        ]
+    }
 
-    return {"prompt": [SystemMessage(content=system_prompt),
-                       HumanMessage(content=customer_review)
-                       ]
-                       }
 
 def parser_arguments():
     # parse arguments from command line
 
     parser = argparse.ArgumentParser(
-        description="prompt template input parameters",
-        fromfile_prefix_chars="@"
+        description="prompt template input parameters", fromfile_prefix_chars="@"
     )
 
     parser.add_argument(
@@ -74,7 +73,7 @@ def parser_arguments():
         type=str,
         help="provide audio file name with extension, input provided by the user.",
         required=False,
-        default=None
+        default=None,
     )
 
     parser.add_argument(
@@ -82,28 +81,26 @@ def parser_arguments():
         type=str,
         help="provide text reviews by the user.",
         required=False,
-        default=None
+        default=None,
     )
 
     args = parser.parse_args()
 
     return args
 
+
 def main():
-     args = parser_arguments()
+    args = parser_arguments()
 
-     state=State(
-            customer_audio_file=args.customer_audio_file,
-            customer_query=args.customer_query
-
-        )
-     return state
+    state = State(
+        customer_audio_file=args.customer_audio_file, customer_query=args.customer_query
+    )
+    return state
 
 
-state=main()
-
-prompt=prompt_template(state)
-
-print('\n')
-print(prompt)
-print('\n')
+if __name__ == "__main__":
+    state = main()
+    prompt = prompt_template(state)
+    print("\n")
+    print(prompt)
+    print("\n")

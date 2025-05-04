@@ -1,7 +1,6 @@
 import os
 import dotenv
 import logging
-from pathlib import Path
 import argparse
 from langchain_openai import ChatOpenAI
 from langchain.schema.runnable import RunnableLambda
@@ -15,15 +14,14 @@ logger = logging.getLogger(__name__)
 # load environement variable
 dotenv.load_dotenv()
 
-def classify_reviews(state):
+
+def classify_reviews(state: State):
     """
     Classifies the customer reviews into a category or sentiment (positive, negative, neutral), extract key topics and product mentions.
 
     Returns:
     : json format.
     """
-
-
 
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
@@ -36,18 +34,17 @@ def classify_reviews(state):
             model=state.gpt_model_name,
             temperature=state.temperature,
             max_tokens=state.max_tokens,
-            api_key=api_key
+            api_key=api_key,
         ).with_structured_output(method="json_mode")
 
         logger.info("Creating and running the prompt chain.")
 
         chain = RunnableLambda(prompt_template) | gpt4o_mini
-        response=chain.invoke(state)
+        response = chain.invoke(state)
 
     except Exception as e:
         logger.exception("An error occurred during review classification.")
         raise RuntimeError(f"Review classification failed: {str(e)}")
-
 
     return {"gpt_answer": response}
 
@@ -56,7 +53,7 @@ def parser_arguments():
     # parse arguments from command line
 
     parser = argparse.ArgumentParser(
-        description="whisper model input parameters",
+        description="gpt model input parameters",
         fromfile_prefix_chars="@",
     )
 
@@ -65,7 +62,7 @@ def parser_arguments():
         type=str,
         help="provide audio file name with extension, input provided by the user.",
         required=False,
-        default=None
+        default=None,
     )
 
     parser.add_argument(
@@ -73,7 +70,7 @@ def parser_arguments():
         type=str,
         help="Provide user reviews text.",
         required=False,
-        default=None
+        default=None,
     )
 
     parser.add_argument(
@@ -89,7 +86,7 @@ def parser_arguments():
         type=int,
         help="maximum tokens for LLM model for text generation",
         required=False,
-        default=4096
+        default=4096,
     )
 
     parser.add_argument(
@@ -97,7 +94,7 @@ def parser_arguments():
         type=str,
         help="maximum tokens for LLM model for text generation",
         required=False,
-        default="gpt-4o-mini"
+        default="gpt-4o-mini",
     )
 
     args = parser.parse_args()
@@ -105,20 +102,23 @@ def parser_arguments():
     return args
 
 
-
 def main():
-     args = parser_arguments()
-     state=State(
-            customer_query=args.customer_query,
-            customer_audio_file=args.customer_audio_file,
-            temperature=args.temperature,
-            max_tokens=args.max_tokens,
-            speech2text_model_name=args.speech2text_model_name,
-            voice_language=args.voice_language,
-            gpt_model_name=args.gpt_model_name
+    args = parser_arguments()
+    state = State(
+        customer_query=args.customer_query,
+        customer_audio_file=args.customer_audio_file,
+        temperature=args.temperature,
+        max_tokens=args.max_tokens,
+        speech2text_model_name=args.speech2text_model_name,
+        voice_language=args.voice_language,
+        gpt_model_name=args.gpt_model_name,
+    )
+    return state
 
 
-        )
-     return state
-
-state=main()
+if __name__ == "__main__":
+    state = main()
+    reponse = classify_reviews(state)
+    print("\n")
+    print(reponse)
+    print("\n")

@@ -12,7 +12,6 @@ Main features:
 - Ensures API key is set via environment variable.
 """
 
-
 import os
 import dotenv
 import logging
@@ -29,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 # load environement variable
 dotenv.load_dotenv()
+
 
 def transcribe_audio(state: State):
     """
@@ -52,16 +52,17 @@ def transcribe_audio(state: State):
         whisper = OpenAIWhisperParser(
             model=state.speech2text_model_name,
             temperature=state.temperature,
-            response_format='text',
+            response_format="text",
             language=state.voice_language,
-            api_key=api_key
+            api_key=api_key,
         )
 
         # Define paths
         current_dir = Path(__file__).resolve().parent
         root_dir = current_dir.parent.parent
-        audio_filepath = Path(root_dir, "datalake", "audio_reviews_dataset", state.customer_audio_file)
-
+        audio_filepath = Path(
+            root_dir, "datalake", "audio_reviews_dataset", state.customer_audio_file
+        )
 
         if not audio_filepath.is_file():
             logger.warning("Audio file does not exist: %s", audio_filepath)
@@ -69,7 +70,7 @@ def transcribe_audio(state: State):
 
         logger.info("Loading and transcribing audio: %s", audio_filepath)
         blob = Blob.from_path(audio_filepath)
-        doc_transcription :  Document = whisper.parse(blob)
+        doc_transcription: Document = whisper.parse(blob)
         text_transcription = doc_transcription[0].page_content
 
         output_dir = Path(root_dir, "datalake", "transcription_reviews")
@@ -83,7 +84,7 @@ def transcribe_audio(state: State):
         return {"audio_transcription": text_transcription}
 
     except Exception as e:
-        logger.exception("An error occurred during transcription.")
+        logger.exception("An error occurred during transcription: %s", {e})
         raise
 
 
@@ -100,18 +101,16 @@ def parser_arguments():
         type=str,
         help="provide audio file name with extension, input provided by the user.",
         required=False,
-        default="complaint3.mp3"
+        default=None,
     )
-
 
     parser.add_argument(
         "--speech2text_model_name",
         type=str,
         help="Provide openai model name that can transcribe and translate audio into text.",
         required=False,
-        default='whisper-1'
+        default="whisper-1",
     )
-
 
     parser.add_argument(
         "--temperature",
@@ -120,7 +119,6 @@ def parser_arguments():
         required=False,
         default=0.0,
     )
-
 
     parser.add_argument(
         "--voice_language",
@@ -135,19 +133,18 @@ def parser_arguments():
     return args
 
 
-
 def main():
-     args = parser_arguments()
-     state=State(
-            customer_audio_file=args.customer_audio_file,
-            temperature=args.temperature,
-            speech2text_model_name=args.speech2text_model_name,
-            voice_language=args.voice_language,
+    args = parser_arguments()
+    state = State(
+        customer_audio_file=args.customer_audio_file,
+        temperature=args.temperature,
+        speech2text_model_name=args.speech2text_model_name,
+        voice_language=args.voice_language,
+    )
+    return state
 
-        )
-     return state
 
-
-state=main()
-audio_transcription=transcribe_audio(state)
-print(audio_transcription)
+if __name__ == "__main__":
+    state = main()
+    audio_transcription = transcribe_audio(state)
+    print(audio_transcription)

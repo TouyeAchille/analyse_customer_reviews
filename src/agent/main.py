@@ -1,6 +1,6 @@
 import logging
 import dotenv
-
+import argparse
 
 from agent.state import State
 from agent.whisper import transcribe_audio
@@ -36,6 +36,7 @@ builder.add_edge("review_classification", END)
 # Compile graph
 graph = builder.compile()
 
+
 def parser_arguments():
     # parse arguments from command line
 
@@ -49,7 +50,7 @@ def parser_arguments():
         type=str,
         help="provide audio file name with extension, input provided by the user.",
         required=False,
-        default=None
+        default=None,
     )
 
     parser.add_argument(
@@ -57,7 +58,7 @@ def parser_arguments():
         type=str,
         help="Provide user reviews text.",
         required=False,
-        default=None
+        default=None,
     )
 
     args = parser.parse_args()
@@ -66,11 +67,10 @@ def parser_arguments():
 
 
 def main():
-     args = parser_arguments()
+    args = parser_arguments()
 
-      # Initialisation de l'objet `state`
-     state=State(
-            customer_audio_file=args.customer_audio_file,
-            customer_query=args.customer_query
-        )
-     return state
+    # Initialisation de l'objet `state`
+    state = State(
+        customer_audio_file=args.customer_audio_file, customer_query=args.customer_query
+    )
+    return state
