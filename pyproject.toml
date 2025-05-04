@@ -1,17 +1,17 @@
 [project]
-name = "src"
+name = "customer_AI_agent"
 version = "0.1.0"
-description = ""
+description = "Categorize customer reviews feedback on Air France services using LLMs: detect sentiment (positive, negative, neutral), extract key topics and product mentions."
+license = "MIT"
 authors = [
-    {name = "Mbogol Touye Achille ",email = "touyejunior@gmail.com"}
+    {name = "Mbogol Touye Achille", email = "touyejunior@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<=3.13"
 dependencies = [
-    "dotenv",
+    "python-dotenv",
     "requests",
-    "poetry",
-    "pre-commit"
+    "ffmpeg",
     "openai==1.76.2",
     "langchain==0.3.24",
     "langchain-core==0.3.56",
@@ -21,13 +21,23 @@ dependencies = [
     "langgraph-prebuilt==0.1.8",
     "langgraph-sdk==0.1.66",
     "langsmith==0.3.39",
-    "langserve==0.3.1",
-    "langchain-cli==0.0.36"
+    "langchain-community==0.3.23",
+    "pydub==0.25.1"
+]
 
 [tool.poetry]
-packages = [{include = "src", from = "src"}]
+packages = [
+    { include = "agent", from = "src" }
+]
+
+[tool.poetry.group.dev.dependencies]
+black = "*"
+flake8 = "*"
+pre-commit = "*"
+poetry = "*"
+langgraph-cli="0.2.7"
 
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
+requires = ["poetry-core>=1.7.0"]
 build-backend = "poetry.core.masonry.api"

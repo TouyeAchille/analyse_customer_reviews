@@ -5,10 +5,14 @@ channels:
 dependencies:
   - python=3.12.1
   - pip
+  - ffmpeg
   - pip:
-      - dotenv
+      - python-dotenv
       - requests
       - poetry
+      - black
+      - flake8
+      - pre-commit
       - openai==1.76.2
       - langchain==0.3.24
       - langchain-core==0.3.56
@@ -19,4 +23,6 @@ dependencies:
       - langgraph-sdk==0.1.66
       - langsmith==0.3.39
       - langserve==0.3.1
-      - langchain-cli==0.0.36
+      - langgraph-cli==0.2.7
+      - langchain-community==0.3.23
+      - pydub==0.25.1
