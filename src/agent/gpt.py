@@ -16,8 +16,8 @@ dotenv.load_dotenv()
 
 
 def prompt(state: State):
-    message = prompt_template(state)
-    return message.get("prompt")
+    message: State= prompt_template(state)
+    return message.prompt
 
 
 def classify_reviews(state: State):

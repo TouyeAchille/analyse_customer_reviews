@@ -44,8 +44,8 @@ Please respond only in JSON format like this:
         customer_review = state.customer_query
 
     elif state.customer_audio_file and not state.customer_query:
-        transcription_result = transcribe_audio(state)
-        customer_review = transcription_result.get("audio_transcribe", "")
+        transcription_result: State = transcribe_audio(state)
+        customer_review = transcription_result.audio_transcribe
 
     else:
         logger.error("No input provided by the user.")
