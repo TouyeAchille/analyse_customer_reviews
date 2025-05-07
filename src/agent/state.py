@@ -40,7 +40,7 @@ class State(BaseModel):
 
     # output for each step (node)
     gpt_answer: dict = Field(default=None, description="gpt output")
-    prompt: dict = Field(default=None, description="prompt template")
+    prompt: list = Field(default=None, description="prompt template")
     audio_transcribe: str = Field(
         default=None, description="output of audio transcription with wishper model"
     )
