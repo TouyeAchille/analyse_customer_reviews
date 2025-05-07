@@ -15,12 +15,19 @@ logger = logging.getLogger(__name__)
 dotenv.load_dotenv()
 
 
+def prompt(state: State):
+    message = prompt_template(state)
+    return message.get("prompt")
+
+
 def classify_reviews(state: State):
     """
-    Classifies the customer reviews into a category or sentiment (positive, negative, neutral), extract key topics and product mentions.
+    Classifies the customer reviews into a category or sentiment (positive, negative, neutral),
+    extract key topics and product mentions.
 
     Returns:
     : json format.
+
     """
 
     api_key = os.getenv("OPENAI_API_KEY")
@@ -39,7 +46,7 @@ def classify_reviews(state: State):
 
         logger.info("Creating and running the prompt chain.")
 
-        chain = RunnableLambda(prompt_template) | gpt4o_mini
+        chain = RunnableLambda(prompt) | gpt4o_mini
         response = chain.invoke(state)
 
     except Exception as e:
@@ -104,15 +111,15 @@ def parser_arguments():
 
 def main():
     args = parser_arguments()
+    
     state = State(
         customer_query=args.customer_query,
         customer_audio_file=args.customer_audio_file,
         temperature=args.temperature,
         max_tokens=args.max_tokens,
-        speech2text_model_name=args.speech2text_model_name,
-        voice_language=args.voice_language,
         gpt_model_name=args.gpt_model_name,
     )
+
     return state
 
 
