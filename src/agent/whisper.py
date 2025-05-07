@@ -81,7 +81,8 @@ def transcribe_audio(state: State):
             f.write(text_transcription)
         logger.info("Transcription saved to: %s", transcription_file)
 
-        return {"audio_transcription": text_transcription}
+        #return #{"audio_transcribe": text_transcription} 
+        return State(audio_transcribe=text_transcription,  customer_audio_file=state.customer_audio_file)
 
     except Exception as e:
         logger.exception("An error occurred during transcription: %s", {e})

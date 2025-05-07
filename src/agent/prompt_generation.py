@@ -45,7 +45,7 @@ Please respond only in JSON format like this:
 
     elif state.customer_audio_file and not state.customer_query:
         transcription_result = transcribe_audio(state)
-        customer_review = transcription_result.get("audio_transcription", "")
+        customer_review = transcription_result.get("audio_transcribe", "")
 
     else:
         logger.error("No input provided by the user.")
@@ -53,11 +53,11 @@ Please respond only in JSON format like this:
             "You must provide either a text review or an audio file reviews."
         )
 
-    return {
-        "prompt": [
+    return State(prompt=[
             SystemMessage(content=system_prompt),
             HumanMessage(content=customer_review),
-        ]
+        ],
+         customer_audio_file=state.customer_audio_file, customer_query=state.customer_query
     }
 
 

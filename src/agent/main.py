@@ -7,7 +7,7 @@ from agent.whisper import transcribe_audio
 from agent.prompt_generation import prompt_template
 from agent.gpt import classify_reviews
 from langgraph.graph import StateGraph, START, END
-
+from typing import Literal
 # set logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger(__name__)
@@ -15,22 +15,37 @@ logger = logging.getLogger(__name__)
 # load environement variable
 dotenv.load_dotenv()
 
+def detect_input_mode(state: State) -> Literal["prompt_generation", "audio_transcription"]:
+    # text input
+    if state.customer_query:
+        return "prompt_generation" 
+    # voice input
+    elif state.customer_audio_file:
+        return "audio_transcription"
+    else:
+        logger.error("No input provided by the user.")
+        raise ValueError("No input detected. Please provide either text or audio.")  
 
 # Build graph
 builder = StateGraph(State)
 
 # define node (step)
-builder.add_node("audio_transcription", transcribe_audio(State))
-builder.add_node("prompt_generation", prompt_template(State))
-builder.add_node("review_classification", classify_reviews(State))
+builder.add_node("audio_transcription", transcribe_audio)     # whisper
+builder.add_node("prompt_generation", prompt_template)        # prompt template
+#builder.add_node("review_classification", classify_reviews)   # gpt
 
-# logic
-builder.add_edge(START, "audio_transcription")
-builder.add_edge(START, "prompt_generation")
+# Condition entry point : input can be text or audio
+builder.add_conditional_edges(START, detect_input_mode)
 
-builder.add_edge("text_retriever", "multimodal_llm")
-builder.add_edge("image_retriever", "multimodal_llm")
-builder.add_edge("review_classification", END)
+# if text input, then follow this logic
+#builder.add_edge("prompt_generation", "review_classification")
+
+# if voice review input, then follow this logic
+builder.add_edge("audio_transcription", "prompt_generation")
+#builder.add_edge("prompt_generation","review_classification")
+
+# output
+#builder.add_edge("review_classification", END)
 
 
 # Compile graph
@@ -41,7 +56,7 @@ def parser_arguments():
     # parse arguments from command line
 
     parser = argparse.ArgumentParser(
-        description="Prompt template input parameters",
+        description="LLM input parameters",
         fromfile_prefix_chars="@",
     )
 
@@ -61,6 +76,48 @@ def parser_arguments():
         default=None,
     )
 
+    
+    parser.add_argument(
+        "--speech2text_model_name",
+        type=str,
+        help="Provide openai model name that can transcribe and translate audio into text.",
+        required=False,
+        default="whisper-1",
+    )
+
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        help="temperature value between 0 and 1 for LLM model for text generation",
+        required=False,
+        default=0.0,
+    )
+
+    parser.add_argument(
+        "--max_tokens",
+        type=int,
+        help="maximum tokens for LLM model for text generation",
+        required=False,
+        default=4096,
+    )
+
+    parser.add_argument(
+        "--gpt_model_name",
+        type=str,
+        help="maximum tokens for LLM model for text generation",
+        required=False,
+        default="gpt-4o-mini",
+    )
+
+
+    parser.add_argument(
+        "--voice_language",
+        type=str,
+        help="The language of the input audio.",
+        required=False,
+        default="en",
+    )
+
     args = parser.parse_args()
 
     return args
@@ -69,8 +126,24 @@ def parser_arguments():
 def main():
     args = parser_arguments()
 
-    # Initialisation de l'objet `state`
-    state = State(
-        customer_audio_file=args.customer_audio_file, customer_query=args.customer_query
+    response=graph.invoke(
+        State(customer_audio_file=args.customer_audio_file, 
+              customer_query=args.customer_query,
+              temperature=args.temperature,
+              speech2text_model_name=args.speech2text_model_name,
+              voice_language=args.voice_language,
+              gpt_model_name=args.gpt_model_name,
+              max_tokens=args.max_tokens
+
     )
-    return state
+    )
+
+    return response
+
+# run script
+if __name__ == "__main__":
+    
+    # output
+    response = main()
+    print("\n")
+    print(response)
