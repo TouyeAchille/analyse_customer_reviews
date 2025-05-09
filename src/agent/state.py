@@ -45,7 +45,7 @@ class State(BaseModel):
         default=None, description="output of audio transcription with wishper model"
     )
 
-    @root_validator(pre=True)
+    #@root_validator(pre=True)
     def detect_input_mode(cls, values: dict):
         query = values.get("customer_query")
         audio = values.get("customer_audio_file")

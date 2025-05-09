@@ -40,7 +40,14 @@ def transcribe_audio(state: State):
     """
     if not state.customer_audio_file:
         logger.info("No audio file provided by the user.")
-        return {"audio_transcription": ""}
+        return State(
+            audio_transcribe="",
+            customer_audio_file=None,
+            voice_language=state.voice_language,
+            speech2text_model_name=state.speech2text_model_name,
+            temperature=state.temperature,
+            max_tokens=state.max_tokens,
+        )
 
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
@@ -48,7 +55,7 @@ def transcribe_audio(state: State):
         raise EnvironmentError("Missing OpenAI API Key. Please set OPENAI_API_KEY.")
 
     try:
-        logger.info("Initializing Whisper model")
+        logger.info("Initializing Whisper model: %s", state.speech2text_model_name)
         whisper = OpenAIWhisperParser(
             model=state.speech2text_model_name,
             temperature=state.temperature,
@@ -62,29 +69,38 @@ def transcribe_audio(state: State):
         root_dir = current_dir.parent.parent
         audio_filepath = Path(
             root_dir, "datalake", "audio_reviews_dataset", state.customer_audio_file
-        )
+        ).resolve()
 
         if audio_filepath.is_file():
             logger.info("Loading and transcribing audio: %s", audio_filepath)
             blob = Blob.from_path(audio_filepath)
-            doc_transcription: Document = whisper.parse(blob)
-
+            doc_transcription: list[Document]= whisper.parse(blob)
+            
             text_transcription = doc_transcription[0].page_content
+            logger.info("Transcription completed successfully.")
+
             output_dir = Path(root_dir, "datalake", "transcription_reviews")
             output_dir.mkdir(parents=True, exist_ok=True)
             transcription_file = output_dir / f"{audio_filepath.stem}.txt"
             with transcription_file.open("w", encoding="utf-8") as f:
                 f.write(text_transcription)
-            
+
             logger.info("Transcription saved to: %s", transcription_file)
-            logger.info("Transcription completed successfully.")
+            
             return State(
             audio_transcribe=text_transcription,
-            customer_audio_file=state.customer_audio_file )
-        
+            customer_audio_file=state.customer_audio_file,
+            voice_language=state.voice_language,
+            speech2text_model_name=state.speech2text_model_name,
+            temperature=state.temperature,
+            max_tokens=state.max_tokens,
+            
+            )
+
         else: 
             logger.warning("Audio file does not exist: %s", audio_filepath)
-            return {"audio_transcription": ""}
+            raise FileNotFoundError(f"Audio file not found: {audio_filepath}")
+        
     except Exception as e:
         logger.exception("An error occurred during transcription: %s", {e})
         raise
@@ -130,6 +146,14 @@ def parser_arguments():
         default="en",
     )
 
+    parser.add_argument(
+        "--max_tokens",
+        type=int,
+        help="maximum tokens for LLM model for text generation",
+        required=False,
+        default=4096
+    )
+
     args = parser.parse_args()
 
     return args
@@ -142,6 +166,7 @@ def main():
         temperature=args.temperature,
         speech2text_model_name=args.speech2text_model_name,
         voice_language=args.voice_language,
+        max_tokens=args.max_tokens,
     )
     return state
 
@@ -149,5 +174,6 @@ def main():
 if __name__ == "__main__":
     state = main()
     audio_transcription = transcribe_audio(state)
-    print("#### Transcription Result: ###")
+    print("Transcription Result:")
+    print('----------------------------------')
     print(audio_transcription)

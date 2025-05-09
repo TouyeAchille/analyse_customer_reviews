@@ -20,13 +20,13 @@ dotenv.load_dotenv()
 
 def routing_input_mode(
     state: State,
-) -> Literal["prompt_generation", "audio_transcription"]:
+) -> Literal["prompt_generation", "whisper_audio_transcription"]:
     # text input
     if state.customer_query:
        return "prompt_generation"
     # voice input
     elif state.customer_audio_file:
-        return "audio_transcription"
+        return "whisper_audio_transcription"
     else:
         logger.error("No input provided by the user.")
         raise ValueError("No input detected. Please provide either text or audio.")
@@ -36,28 +36,25 @@ def routing_input_mode(
 builder = StateGraph(State)
 
 # define node (step)
-builder.add_node("audio_transcription", transcribe_audio)  # whisper
+builder.add_node("whisper_audio_transcription", transcribe_audio)  # whisper
 builder.add_node("prompt_generation", prompt_template)  # prompt template
-builder.add_node("reviews_classification", classify_reviews)  # gpt
+builder.add_node("gpt_reviews_classification", classify_reviews)  # gpt
 
 # connect nodes
 builder.add_conditional_edges(
     START, routing_input_mode
 )  # Condition entry point : input can be text or audio
 
-#builder.add_edge(
-    #"prompt_generation", "reviews_classification"
-#)  # if text input, then follow this logic
 
 builder.add_edge(
-    "audio_transcription", "prompt_generation"
+    "whisper_audio_transcription", "prompt_generation"
 )  # if audio input, then follow this logic
 
 builder.add_edge(
-    "prompt_generation", "reviews_classification"
+    "prompt_generation", "gpt_reviews_classification"
 )  # if text input, then follow this logic
 
-builder.add_edge("reviews_classification", END)
+builder.add_edge("gpt_reviews_classification", END)
 
 #
 # Compile graph
@@ -148,7 +145,8 @@ def main():
         )
     )
 
-    return response["gpt_answer"]
+
+    return response 
 
 
 # run script

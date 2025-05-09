@@ -16,8 +16,7 @@ dotenv.load_dotenv()
 
 
 def prompt(state: State):
-    message: State = prompt_template(state)
-    return message.prompt
+    return prompt_template(state).prompt
 
 
 def classify_reviews(state: State):
@@ -25,12 +24,16 @@ def classify_reviews(state: State):
     Classifies the customer reviews into a category or sentiment (positive, negative, neutral),
     extract key topics and product mentions.
 
+    Classifies the customer reviews using GPT model
+    and returns an updated State with the GPT answer.
+    
     Returns:
     : json format.
 
     """
 
     api_key = os.getenv("OPENAI_API_KEY")
+    print(f"API Key: {api_key}")
     if not api_key:
         logger.error("OPENAI_API_KEY not found in environment variables.")
         raise EnvironmentError("Missing OpenAI API Key. Please set OPENAI_API_KEY.")
@@ -41,20 +44,23 @@ def classify_reviews(state: State):
             model=state.gpt_model_name,
             temperature=state.temperature,
             max_tokens=state.max_tokens,
-            api_key=api_key,
+            #api_key=api_key,
         ).with_structured_output(method="json_mode")
 
         logger.info("Creating and running the prompt chain.")
         chain = RunnableLambda(prompt) | gpt4o_mini
         response = chain.invoke(state)
         logger.info("Review classification completed successfully.")
+        
+        return {'gpt_answer': response} # final output
 
     except Exception as e:
         logger.exception("An error occurred during review classification.")
         raise RuntimeError(f"Review classification failed: {str(e)}")
 
-    return dict(gpt_answer=response)
+    
 
+        
 
 def parser_arguments():
     # parse arguments from command line
