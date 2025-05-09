@@ -8,6 +8,8 @@ from agent.prompt_generation import prompt_template
 from agent.gpt import classify_reviews
 from langgraph.graph import StateGraph, START, END
 from typing import Literal
+
+
 # set logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger(__name__)
@@ -15,39 +17,49 @@ logger = logging.getLogger(__name__)
 # load environement variable
 dotenv.load_dotenv()
 
-def detect_input_mode(state: State) -> Literal["prompt_generation", "audio_transcription"]:
+
+def routing_input_mode(
+    state: State,
+) -> Literal["prompt_generation", "audio_transcription"]:
     # text input
     if state.customer_query:
-        return "prompt_generation" 
+       return "prompt_generation"
     # voice input
     elif state.customer_audio_file:
         return "audio_transcription"
     else:
         logger.error("No input provided by the user.")
-        raise ValueError("No input detected. Please provide either text or audio.")  
+        raise ValueError("No input detected. Please provide either text or audio.")
+
 
 # Build graph
 builder = StateGraph(State)
 
 # define node (step)
-builder.add_node("audio_transcription", transcribe_audio)     # whisper
-builder.add_node("prompt_generation", prompt_template)        # prompt template
-#builder.add_node("review_classification", classify_reviews)   # gpt
+builder.add_node("audio_transcription", transcribe_audio)  # whisper
+builder.add_node("prompt_generation", prompt_template)  # prompt template
+builder.add_node("reviews_classification", classify_reviews)  # gpt
 
-# Condition entry point : input can be text or audio
-builder.add_conditional_edges(START, detect_input_mode)
+# connect nodes
+builder.add_conditional_edges(
+    START, routing_input_mode
+)  # Condition entry point : input can be text or audio
 
-# if text input, then follow this logic
-#builder.add_edge("prompt_generation", "review_classification")
+#builder.add_edge(
+    #"prompt_generation", "reviews_classification"
+#)  # if text input, then follow this logic
 
-# if voice review input, then follow this logic
-builder.add_edge("audio_transcription", "prompt_generation")
-#builder.add_edge("prompt_generation","review_classification")
+builder.add_edge(
+    "audio_transcription", "prompt_generation"
+)  # if audio input, then follow this logic
 
-# output
-#builder.add_edge("review_classification", END)
+builder.add_edge(
+    "prompt_generation", "reviews_classification"
+)  # if text input, then follow this logic
 
+builder.add_edge("reviews_classification", END)
 
+#
 # Compile graph
 graph = builder.compile()
 
@@ -76,7 +88,6 @@ def parser_arguments():
         default=None,
     )
 
-    
     parser.add_argument(
         "--speech2text_model_name",
         type=str,
@@ -109,7 +120,6 @@ def parser_arguments():
         default="gpt-4o-mini",
     )
 
-
     parser.add_argument(
         "--voice_language",
         type=str,
@@ -126,24 +136,25 @@ def parser_arguments():
 def main():
     args = parser_arguments()
 
-    response=graph.invoke(
-        State(customer_audio_file=args.customer_audio_file, 
-              customer_query=args.customer_query,
-              temperature=args.temperature,
-              speech2text_model_name=args.speech2text_model_name,
-              voice_language=args.voice_language,
-              gpt_model_name=args.gpt_model_name,
-              max_tokens=args.max_tokens
-
+    response = graph.invoke(
+        State(
+            customer_audio_file=args.customer_audio_file,
+            customer_query=args.customer_query,
+            temperature=args.temperature,
+            speech2text_model_name=args.speech2text_model_name,
+            voice_language=args.voice_language,
+            gpt_model_name=args.gpt_model_name,
+            max_tokens=args.max_tokens,
+        )
     )
-    )
 
-    return response
+    return response["gpt_answer"]
+
 
 # run script
 if __name__ == "__main__":
-    
-    # output
+    # run the main function
     response = main()
     print("\n")
     print(response)
+    print("\n")

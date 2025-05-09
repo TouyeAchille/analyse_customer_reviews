@@ -7,7 +7,7 @@ authors = [
     {name = "Mbogol Touye Achille", email = "touyejunior@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.11,<=3.13"
+requires-python = ">=3.11,<3.14"
 dependencies = [
     "python-dotenv",
     "requests",

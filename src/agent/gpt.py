@@ -16,7 +16,7 @@ dotenv.load_dotenv()
 
 
 def prompt(state: State):
-    message: State= prompt_template(state)
+    message: State = prompt_template(state)
     return message.prompt
 
 
@@ -45,15 +45,15 @@ def classify_reviews(state: State):
         ).with_structured_output(method="json_mode")
 
         logger.info("Creating and running the prompt chain.")
-
         chain = RunnableLambda(prompt) | gpt4o_mini
         response = chain.invoke(state)
+        logger.info("Review classification completed successfully.")
 
     except Exception as e:
         logger.exception("An error occurred during review classification.")
         raise RuntimeError(f"Review classification failed: {str(e)}")
 
-    return {"gpt_answer": response}
+    return dict(gpt_answer=response)
 
 
 def parser_arguments():
@@ -111,7 +111,7 @@ def parser_arguments():
 
 def main():
     args = parser_arguments()
-    
+
     state = State(
         customer_query=args.customer_query,
         customer_audio_file=args.customer_audio_file,
@@ -125,7 +125,6 @@ def main():
 
 if __name__ == "__main__":
     state = main()
-    reponse = classify_reviews(state)
+    response = classify_reviews(state)
     print("\n")
-    print(reponse)
-    print("\n")
+    print(response)

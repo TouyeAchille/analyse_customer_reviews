@@ -36,7 +36,7 @@ def transcribe_audio(state: State):
     Handles cases where no audio is provided.
 
     Returns:
-        dict: {"audio_transcription": "..."} or {"audio_transcription": ""}
+        State or {"audio_transcription": ""}
     """
     if not state.customer_audio_file:
         logger.info("No audio file provided by the user.")
@@ -64,26 +64,27 @@ def transcribe_audio(state: State):
             root_dir, "datalake", "audio_reviews_dataset", state.customer_audio_file
         )
 
-        if not audio_filepath.is_file():
+        if audio_filepath.is_file():
+            logger.info("Loading and transcribing audio: %s", audio_filepath)
+            blob = Blob.from_path(audio_filepath)
+            doc_transcription: Document = whisper.parse(blob)
+
+            text_transcription = doc_transcription[0].page_content
+            output_dir = Path(root_dir, "datalake", "transcription_reviews")
+            output_dir.mkdir(parents=True, exist_ok=True)
+            transcription_file = output_dir / f"{audio_filepath.stem}.txt"
+            with transcription_file.open("w", encoding="utf-8") as f:
+                f.write(text_transcription)
+            
+            logger.info("Transcription saved to: %s", transcription_file)
+            logger.info("Transcription completed successfully.")
+            return State(
+            audio_transcribe=text_transcription,
+            customer_audio_file=state.customer_audio_file )
+        
+        else: 
             logger.warning("Audio file does not exist: %s", audio_filepath)
             return {"audio_transcription": ""}
-
-        logger.info("Loading and transcribing audio: %s", audio_filepath)
-        blob = Blob.from_path(audio_filepath)
-        doc_transcription: Document = whisper.parse(blob)
-        text_transcription = doc_transcription[0].page_content
-
-        output_dir = Path(root_dir, "datalake", "transcription_reviews")
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        transcription_file = output_dir / f"{audio_filepath.stem}.txt"
-        with transcription_file.open("w", encoding="utf-8") as f:
-            f.write(text_transcription)
-        logger.info("Transcription saved to: %s", transcription_file)
-
-        #return #{"audio_transcribe": text_transcription} 
-        return State(audio_transcribe=text_transcription,  customer_audio_file=state.customer_audio_file)
-
     except Exception as e:
         logger.exception("An error occurred during transcription: %s", {e})
         raise
@@ -148,4 +149,5 @@ def main():
 if __name__ == "__main__":
     state = main()
     audio_transcription = transcribe_audio(state)
+    print("#### Transcription Result: ###")
     print(audio_transcription)

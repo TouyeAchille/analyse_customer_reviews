@@ -2,7 +2,10 @@ import logging
 import argparse
 from langchain_core.messages import HumanMessage, SystemMessage
 from agent.state import State
-from agent.whisper import transcribe_audio
+
+# from agent.whisper import transcribe_audio
+from pathlib import Path
+
 
 # set logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
@@ -39,13 +42,28 @@ Please respond only in JSON format like this:
 }
 
 """
+    current_dir = Path(__file__).resolve().parent
+    root_dir = current_dir.parent.parent
 
     if state.customer_query and not state.customer_audio_file:
         customer_review = state.customer_query
 
     elif state.customer_audio_file and not state.customer_query:
-        transcription_result: State = transcribe_audio(state)
-        customer_review = transcription_result.audio_transcribe
+        audio_filepath = Path(
+            root_dir, "datalake", "audio_reviews_dataset", state.customer_audio_file
+        )
+        output_dir = Path(root_dir, "datalake", "transcription_reviews")
+        transcription_file = output_dir / f"{audio_filepath.stem}.txt"
+
+        try:
+            with transcription_file.open("r", encoding="utf-8") as f:
+                customer_review = f.read()
+            logger.info(
+                "Text transcription (audio to text) filepath: %s", transcription_file
+            )
+        except FileNotFoundError:
+            logger.error("Transcription file not found at: %s", transcription_file)
+            raise
 
     else:
         logger.error("No input provided by the user.")
@@ -53,12 +71,14 @@ Please respond only in JSON format like this:
             "You must provide either a text review or an audio file reviews."
         )
 
-    return State(prompt=[
+    return State(
+        prompt=[
             SystemMessage(content=system_prompt),
             HumanMessage(content=customer_review),
         ],
-         customer_audio_file=state.customer_audio_file, customer_query=state.customer_query
-    }
+        customer_audio_file=state.customer_audio_file,
+        customer_query=state.customer_query,
+    )
 
 
 def parser_arguments():
