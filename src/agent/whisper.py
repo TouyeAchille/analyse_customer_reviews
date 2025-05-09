@@ -74,8 +74,8 @@ def transcribe_audio(state: State):
         if audio_filepath.is_file():
             logger.info("Loading and transcribing audio: %s", audio_filepath)
             blob = Blob.from_path(audio_filepath)
-            doc_transcription: list[Document]= whisper.parse(blob)
-            
+            doc_transcription: list[Document] = whisper.parse(blob)
+
             text_transcription = doc_transcription[0].page_content
             logger.info("Transcription completed successfully.")
 
@@ -86,21 +86,20 @@ def transcribe_audio(state: State):
                 f.write(text_transcription)
 
             logger.info("Transcription saved to: %s", transcription_file)
-            
+
             return State(
-            audio_transcribe=text_transcription,
-            customer_audio_file=state.customer_audio_file,
-            voice_language=state.voice_language,
-            speech2text_model_name=state.speech2text_model_name,
-            temperature=state.temperature,
-            max_tokens=state.max_tokens,
-            
+                audio_transcribe=text_transcription,
+                customer_audio_file=state.customer_audio_file,
+                voice_language=state.voice_language,
+                speech2text_model_name=state.speech2text_model_name,
+                temperature=state.temperature,
+                max_tokens=state.max_tokens,
             )
 
-        else: 
+        else:
             logger.warning("Audio file does not exist: %s", audio_filepath)
             raise FileNotFoundError(f"Audio file not found: {audio_filepath}")
-        
+
     except Exception as e:
         logger.exception("An error occurred during transcription: %s", {e})
         raise
@@ -151,7 +150,7 @@ def parser_arguments():
         type=int,
         help="maximum tokens for LLM model for text generation",
         required=False,
-        default=4096
+        default=4096,
     )
 
     args = parser.parse_args()
@@ -175,5 +174,5 @@ if __name__ == "__main__":
     state = main()
     audio_transcription = transcribe_audio(state)
     print("Transcription Result:")
-    print('----------------------------------')
+    print("----------------------------------")
     print(audio_transcription)

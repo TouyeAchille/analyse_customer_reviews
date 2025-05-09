@@ -26,7 +26,7 @@ def classify_reviews(state: State):
 
     Classifies the customer reviews using GPT model
     and returns an updated State with the GPT answer.
-    
+
     Returns:
     : json format.
 
@@ -44,23 +44,20 @@ def classify_reviews(state: State):
             model=state.gpt_model_name,
             temperature=state.temperature,
             max_tokens=state.max_tokens,
-            #api_key=api_key,
+            # api_key=api_key,
         ).with_structured_output(method="json_mode")
 
         logger.info("Creating and running the prompt chain.")
         chain = RunnableLambda(prompt) | gpt4o_mini
         response = chain.invoke(state)
         logger.info("Review classification completed successfully.")
-        
-        return {'gpt_answer': response} # final output
+
+        return {"gpt_answer": response}  # final output
 
     except Exception as e:
         logger.exception("An error occurred during review classification.")
         raise RuntimeError(f"Review classification failed: {str(e)}")
 
-    
-
-        
 
 def parser_arguments():
     # parse arguments from command line

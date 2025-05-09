@@ -1,7 +1,7 @@
 """Define the state structures for the agent."""
 
 import logging
-from pydantic import BaseModel, Field, root_validator
+from pydantic import BaseModel, Field
 from typing import Optional, Literal
 
 # Configure logger
@@ -45,7 +45,6 @@ class State(BaseModel):
         default=None, description="output of audio transcription with wishper model"
     )
 
-    #@root_validator(pre=True)
     def detect_input_mode(cls, values: dict):
         query = values.get("customer_query")
         audio = values.get("customer_audio_file")

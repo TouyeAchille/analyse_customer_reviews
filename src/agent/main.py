@@ -23,7 +23,7 @@ def routing_input_mode(
 ) -> Literal["prompt_generation", "whisper_audio_transcription"]:
     # text input
     if state.customer_query:
-       return "prompt_generation"
+        return "prompt_generation"
     # voice input
     elif state.customer_audio_file:
         return "whisper_audio_transcription"
@@ -145,8 +145,7 @@ def main():
         )
     )
 
-
-    return response 
+    return response
 
 
 # run script
