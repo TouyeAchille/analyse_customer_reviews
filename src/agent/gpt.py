@@ -33,7 +33,7 @@ def classify_reviews(state: State):
     """
 
     api_key = os.getenv("OPENAI_API_KEY")
-    print(f"API Key: {api_key}")
+
     if not api_key:
         logger.error("OPENAI_API_KEY not found in environment variables.")
         raise EnvironmentError("Missing OpenAI API Key. Please set OPENAI_API_KEY.")
@@ -129,5 +129,6 @@ def main():
 if __name__ == "__main__":
     state = main()
     response = classify_reviews(state)
-    print("\n")
-    print(response)
+    print("-----------------------------------")
+    print("GPT Answer:")
+    print(response["gpt_answer"])
